@@ -3,6 +3,7 @@ import GlobalStyles from "./src/constants/GlobalStyles";
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
+import { Navbar } from "./components/Navbar";
 
 export default function App() {
   // load custom fonts
@@ -19,20 +20,23 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Image
-        style={{ height: 90, resizeMode: "contain" }}
-        source={require("./assets/images/recovibez-logo.png")}
-      />
-      <Image
-        style={GlobalStyles.icons.lg}
-        source={require("./assets/icons/disk-icon.png")}
-      />
-      <Text
-        style={[GlobalStyles.text.h3, { color: GlobalStyles.colors.white }]}
-      >
-        Open up App.js to start working on your app!
-      </Text>
-      <StatusBar style="auto" />
+      <View style={styles.container}>
+        <Image
+          style={{ height: 90, resizeMode: "contain" }}
+          source={require("./assets/images/recovibez-logo.png")}
+        />
+        <Image
+          style={GlobalStyles.icons.lg}
+          source={require("./assets/icons/disk-icon.png")}
+        />
+        <Text
+          style={[GlobalStyles.text.h3, { color: GlobalStyles.colors.white }]}
+        >
+          Open up App.js to start working on your app!
+        </Text>
+      </View>
+      <Navbar />
+      <StatusBar style="light" />
     </View>
   );
 }
