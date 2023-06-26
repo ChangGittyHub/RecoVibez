@@ -9,12 +9,13 @@ import {
 } from "react-native";
 import GlobalStyles from "../src/constants/GlobalStyles";
 import { useEffect, useRef, useState } from "react";
+import { Screens } from "../src/constants/Screens";
 
 const containerHeight = 75;
 const followHeight = 85;
 const followLeftError = 3;
 
-export const Navbar = () => {
+export const Navbar = ({ handleNavigation }) => {
   const [navbuttonPosition1, setNavbuttonPosition1] = useState({
     x: 0,
     y: 0,
@@ -75,7 +76,11 @@ export const Navbar = () => {
     }).start();
   };
 
-  const onClickHandler = (navbuttonPosition, navbuttonTargetTop) => {
+  const onPressHandler = (
+    navbuttonPosition,
+    navbuttonTargetTop,
+    screenToNavigate
+  ) => {
     resetButtonPositions();
 
     Animated.timing(navbuttonTargetTop, {
@@ -99,20 +104,18 @@ export const Navbar = () => {
     //   duration: 250,
     //   useNativeDriver: false,
     // }).start();
+    handleNavigation(screenToNavigate);
   };
 
   return (
-    <View
-      style={styles.container}
-      // class="tabbar tab-style1"
-    >
+    <View style={styles.container}>
       <Animated.View
         onLayout={(event) => setNavbuttonPosition1(event.nativeEvent.layout)}
         style={{ top: navbuttonTargetTop1 }}
       >
         <TouchableOpacity
           onPress={(event) =>
-            onClickHandler(navbuttonPosition1, navbuttonTargetTop1)
+            onPressHandler(navbuttonPosition1, navbuttonTargetTop1, Screens.DashboardScreen)
           }
         >
           <Image
@@ -128,7 +131,7 @@ export const Navbar = () => {
       >
         <TouchableOpacity
           onPress={(event) =>
-            onClickHandler(navbuttonPosition2, navbuttonTargetTop2)
+            onPressHandler(navbuttonPosition2, navbuttonTargetTop2, Screens.DashboardScreen)
           }
         >
           <Image
@@ -148,7 +151,7 @@ export const Navbar = () => {
       >
         <TouchableOpacity
           onPress={(event) =>
-            onClickHandler(navbuttonPosition3, navbuttonTargetTop3)
+            onPressHandler(navbuttonPosition3, navbuttonTargetTop3, Screens.RecoScreen)
           }
         >
           <Image
@@ -164,7 +167,7 @@ export const Navbar = () => {
       >
         <TouchableOpacity
           onPress={(event) =>
-            onClickHandler(navbuttonPosition4, navbuttonTargetTop4)
+            onPressHandler(navbuttonPosition4, navbuttonTargetTop4, Screens.DashboardScreen)
           }
         >
           <Image
