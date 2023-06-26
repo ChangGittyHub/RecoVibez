@@ -3,20 +3,12 @@ import GlobalStyles from "./src/constants/GlobalStyles";
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
+import { Navbar } from "./components/Navbar";
+import { useState } from "react";
+import { Screens } from "./src/constants/Screens";
 
-export default function App() {
-  // load custom fonts
-  const [fontsLoaded] = useFonts({
-    "Poppins-Regular": require("./assets/fonts/Poppins-Regular.ttf"),
-    "Poppins-Medium": require("./assets/fonts/Poppins-Medium.ttf"),
-    "Poppins-SemiBold": require("./assets/fonts/Poppins-SemiBold.ttf"),
-    "Poppins-Bold": require("./assets/fonts/Poppins-Bold.ttf"),
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
+// Placeholder screen
+function DashboardScreen() {
   return (
     <View style={styles.container}>
       <Image
@@ -32,7 +24,49 @@ export default function App() {
       >
         Open up App.js to start working on your app!
       </Text>
-      <StatusBar style="auto" />
+    </View>
+  );
+}
+
+// Placeholder screen
+function RecoScreen() {
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Text>Reco Screen</Text>
+    </View>
+  );
+}
+
+export default function App() {
+  // set the current active screen
+  const [activeScreen, setActiveScreen] = useState(Screens.DashboardScreen);
+
+  // load custom fonts
+  const [fontsLoaded] = useFonts({
+    "Poppins-Regular": require("./assets/fonts/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("./assets/fonts/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("./assets/fonts/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("./assets/fonts/Poppins-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  const handleNavigation = (screen) => {
+    setActiveScreen(screen);
+  };
+
+  return (
+    <View style={styles.container}>
+      {activeScreen === Screens.DashboardScreen ? (
+        <DashboardScreen />
+      ) : activeScreen === Screens.RecoScreen ? (
+        <RecoScreen />
+      ) : null}
+
+      <Navbar handleNavigation={handleNavigation} />
+      <StatusBar style="light" />
     </View>
   );
 }
