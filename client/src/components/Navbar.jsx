@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import GlobalStyles from "../src/constants/GlobalStyles";
+import GlobalStyles from "../constants/GlobalStyles";
 import { useEffect, useRef, useState } from "react";
-import { Screens } from "../src/constants/Screens";
+import { Screens } from "../constants/Screens";
 
 const containerHeight = 75;
 const followHeight = 85;
