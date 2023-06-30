@@ -1,18 +1,9 @@
-import {
-  Animated,
-  Button,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import GlobalStyles from "../constants/GlobalStyles";
 import Constants from "expo-constants";
 import { useEffect, useRef, useState } from "react";
-import { Audio } from "expo-av";
-import Svg, { G, Circle } from "react-native-svg";
 import Carousel from "react-native-snap-carousel";
+import { SongBox } from "../components/SongBox";
 
 export default function RecoScreen() {
   // List of recommended songs
@@ -111,11 +102,23 @@ export default function RecoScreen() {
 
   return (
     <View style={styles.container}>
+      <Text
+        style={[
+          GlobalStyles.text.h1,
+          {
+            color: GlobalStyles.colors.white,
+            width: GlobalStyles.windowW,
+            paddingLeft: 25,
+          },
+        ]}
+      >
+        Top Picks for You
+      </Text>
       <Carousel
         ref={carouselRef}
         data={songList}
         renderItem={_renderSongPlayer}
-        containerCustomStyle={{ flexGrow: 0 }}
+        containerCustomStyle={{ flexGrow: 0, marginTop: 10 }}
         sliderWidth={500}
         itemWidth={250}
         layout={"default"}
@@ -127,8 +130,15 @@ export default function RecoScreen() {
           setActiveSongDetails(songList[slideIndex]);
         }}
       />
-      <View style={{ width: GlobalStyles.windowW, alignItems:"center", paddingLeft: 25, paddingRight:25}}>
-        <Text style={[GlobalStyles.text.h1, styles.songTitle]}>
+      <View
+        style={{
+          width: GlobalStyles.windowW,
+          alignItems: "center",
+          paddingLeft: 25,
+          paddingRight: 25,
+        }}
+      >
+        <Text style={[GlobalStyles.text.h2, styles.songTitle]}>
           {activeSongDetails?.title}
         </Text>
         <View style={{ alignItems: "center", marginTop: 10 }}>
@@ -169,215 +179,12 @@ export default function RecoScreen() {
   );
 }
 
-const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
-  // Ui
-  const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-  const radius = 85;
-  const circleCircumference = 2 * Math.PI * radius;
-  const strokeDashoffset = useRef(
-    new Animated.Value(circleCircumference)
-  ).current;
-
-  const isInnerRingShown = useRef(new Animated.Value(0)).current;
-
-  // Sound
-  const [sound, setSound] = useState();
-  const [soundStatus, setSoundStatus] = useState();
-  const [playPercentage, setPlayPercentage] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Configure Ui animations
-  useEffect(() => {
-    Animated.timing(strokeDashoffset, {
-      toValue:
-        circleCircumference - (circleCircumference * playPercentage) / 100,
-      duration: 50,
-      useNativeDriver: false,
-    }).start();
-  }, [playPercentage]);
-
-  useEffect(() => {
-    Animated.timing(isInnerRingShown, {
-      toValue: isActive ? 1 : 0,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
-  }, [isActive]);
-
-  useEffect(() => {
-    async function playSong(songDetails) {
-      await playSound(songDetails);
-    }
-    if (songDetails && isActive) {
-      playSong(songDetails);
-    }
-    return () => {
-      setPlayPercentage(0);
-      setIsPlaying(false);
-    };
-  }, [songDetails, isActive]);
-
-  async function playSound(songDetails) {
-    await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-
-    let canPlay = false; // this should be stored as some kind of state
-
-    const { sound, status } = await Audio.Sound.createAsync(
-      {
-        uri: songDetails.audioUri,
-      },
-      { shouldPlay: true }
-    );
-
-    _onPlaybackStatusUpdate = (playbackStatus) => {
-      setSoundStatus(playbackStatus);
-
-      if (!playbackStatus.isLoaded) {
-        // Update your UI for the unloaded state
-        if (playbackStatus.error) {
-          console.log(
-            `Encountered a fatal error during playback: ${playbackStatus.error}`
-          );
-          // Send Expo team the error on Slack or the forums so we can help you debug!
-        }
-      } else {
-        // Update your UI for the loaded state
-        canPlay = true;
-        setPlayPercentage(
-          (playbackStatus.positionMillis / playbackStatus.durationMillis) * 100
-        );
-        2;
-        if (playbackStatus.isPlaying) {
-          // Update your UI for the playing state
-          setIsPlaying(true);
-        } else {
-          // Update your UI for the paused state
-          setIsPlaying(false);
-        }
-
-        if (playbackStatus.isBuffering) {
-          // Update your UI for the buffering state
-          console.log("buffering");
-        }
-
-        if (playbackStatus.didJustFinish && !playbackStatus.isLooping) {
-          // The player has just finished playing and will stop. Maybe you want to play something else?
-        }
-      }
-    };
-
-    if (sound && status.isLoaded) {
-      const progressUpdateIntervalMillis = 50;
-      sound.setProgressUpdateIntervalAsync(progressUpdateIntervalMillis);
-      sound.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate);
-      setSoundStateAction(sound);
-      setSound(sound);
-    }
-
-    if (canPlay) await sound.playAsync();
-  }
-
-  async function pauseSound() {
-    if (soundStatus?.isLoaded) {
-      isPlaying ? sound.pauseAsync() : sound.playAsync();
-    }
-  }
-
-  return (
-    <View style={styles.donutWrapper}>
-      <Svg
-        height="300"
-        width="300"
-        viewBox="0 0 200 200"
-        style={{ backgroundColor: "transparent" }}
-      >
-        <G rotation={-90} originX="100" originY="100">
-          <Circle
-            cx="50%"
-            cy="50%"
-            r={radius}
-            stroke="transparent"
-            fill="transparent"
-            strokeWidth="20"
-          />
-          {isActive && (
-            <AnimatedCircle
-              cx="50%"
-              cy="50%"
-              r={radius}
-              stroke={GlobalStyles.colors.pink_100}
-              fill="transparent"
-              strokeWidth="4"
-              strokeDasharray={circleCircumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-            />
-          )}
-          <AnimatedCircle
-            cx="50%"
-            cy="50%"
-            r={77}
-            stroke={GlobalStyles.colors.pink_200}
-            fill="transparent"
-            strokeWidth="4"
-            strokeLinecap="round"
-            opacity={isInnerRingShown}
-          />
-        </G>
-      </Svg>
-      <TouchableOpacity onPress={pauseSound} style={{ position: "absolute" }}>
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
-          {/* Black filter */}
-          <View
-            style={{
-              height: 225,
-              width: 225,
-              borderRadius: 225 / 2,
-              backgroundColor: "black",
-              position: "absolute",
-              opacity: 0.5,
-              zIndex: 1,
-            }}
-          ></View>
-
-          {/* Album Art */}
-          <Image
-            style={{
-              height: 225,
-              width: 225,
-              borderRadius: 225 / 2,
-            }}
-            source={{ uri: songDetails.albumArtUri }}
-          />
-
-          {/* Pause/Play Icon */}
-          <Image
-            style={[
-              GlobalStyles.icons.default,
-              { position: "absolute", height: 35, zIndex: 2 },
-            ]}
-            source={
-              isPlaying
-                ? require("../assets/icons/pause-icon.png")
-                : require("../assets/icons/play-icon.png")
-            }
-          />
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: GlobalStyles.colors.black,
     alignItems: "center",
     paddingTop: Constants.statusBarHeight,
-  },
-  donutWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   songTitle: {
     textAlign: "center",
