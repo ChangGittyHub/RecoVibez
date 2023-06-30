@@ -1,3 +1,5 @@
+import { Dimensions } from "react-native";
+
 const _colors = {
   black: "#20262E",
   white: "#E9E8E8",
@@ -38,6 +40,9 @@ const _text = {
 };
 
 const _icons = {
+  default: {
+    resizeMode: "contain",
+  },
   lg: {
     height: 25,
     resizeMode: "contain",
@@ -60,8 +65,8 @@ const GlobalStyles = {
   colors: _colors,
   text: _text,
   icons: _icons,
-  //   windowW: WINDOW_WIDTH,
-  //   windowH: WINDOW_HEIGHT,
+  windowW: Dimensions.get("window").width,
+  windowH: Dimensions.get("window").height,
 };
 
 export default GlobalStyles;

@@ -62,7 +62,11 @@ export default function RecoScreen() {
           "https://p.scdn.co/mp3-preview/1ee94264cefcac2ffdae6ab696d2f288baaf48ad?cid=0b297fa8a249464ba34f5861d4140e58",
       },
     ];
+
+    // Set the list of recommended songs
     setSongList(songs);
+
+    // Set the first song in the recommendation list to active
     setActiveSongDetails(songs[0]);
   }, []);
 
@@ -73,7 +77,9 @@ export default function RecoScreen() {
   async function unloadSound(sound) {
     if (sound) {
       console.log("Unloading Sound");
-      sound.unloadAsync();
+      sound
+        .unloadAsync()
+        .catch(() => console.log("sound not loaded, hence cannot unload"));
     }
   }
 
@@ -105,30 +111,66 @@ export default function RecoScreen() {
 
   return (
     <View style={styles.container}>
-      {/* <Button title="Play Sound" onPress={(event) => playSound()} /> */}
-      <Text style={{ color: GlobalStyles.colors.white }}>
-        {activeSongDetails?.title}
-      </Text>
       <Carousel
         ref={carouselRef}
         data={songList}
         renderItem={_renderSongPlayer}
+        containerCustomStyle={{ flexGrow: 0 }}
         sliderWidth={500}
         itemWidth={250}
         layout={"default"}
         inactiveSlideOpacity={0.2}
         inactiveSlideScale={0.75}
-        inactiveSlideShift={-50}
+        inactiveSlideShift={50}
         onSnapToItem={async (slideIndex) => {
           await unloadSound(sound);
           setActiveSongDetails(songList[slideIndex]);
         }}
       />
+      <View style={{ width: GlobalStyles.windowW, alignItems:"center", paddingLeft: 25, paddingRight:25}}>
+        <Text style={[GlobalStyles.text.h1, styles.songTitle]}>
+          {activeSongDetails?.title}
+        </Text>
+        <View style={{ alignItems: "center", marginTop: 10 }}>
+          <Text style={[GlobalStyles.text.h3, styles.songInfo]}>
+            Author Name 1, Author Name 2
+          </Text>
+          <Text style={[GlobalStyles.text.h3, styles.songInfo]}>
+            Release Year
+          </Text>
+          <Text style={[GlobalStyles.text.h3, styles.songInfo]}>
+            Classical, Country
+          </Text>
+        </View>
+
+        {/* add-to-playlist, like, menu buttons */}
+        <View style={{ flexDirection: "row", marginTop: 30 }}>
+          <TouchableOpacity>
+            <Image
+              style={[GlobalStyles.icons.sm, styles.recoscreenButton]}
+              source={require("../assets/icons/add-icon.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              style={[GlobalStyles.icons.sm, styles.recoscreenButton]}
+              source={require("../assets/icons/like-icon-fill.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              style={[GlobalStyles.icons.sm, styles.recoscreenButton]}
+              source={require("../assets/icons/menu-icon.png")}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
 
 const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
+  // Ui
   const AnimatedCircle = Animated.createAnimatedComponent(Circle);
   const radius = 85;
   const circleCircumference = 2 * Math.PI * radius;
@@ -136,9 +178,31 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
     new Animated.Value(circleCircumference)
   ).current;
 
+  const isInnerRingShown = useRef(new Animated.Value(0)).current;
+
+  // Sound
   const [sound, setSound] = useState();
+  const [soundStatus, setSoundStatus] = useState();
   const [playPercentage, setPlayPercentage] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Configure Ui animations
+  useEffect(() => {
+    Animated.timing(strokeDashoffset, {
+      toValue:
+        circleCircumference - (circleCircumference * playPercentage) / 100,
+      duration: 50,
+      useNativeDriver: false,
+    }).start();
+  }, [playPercentage]);
+
+  useEffect(() => {
+    Animated.timing(isInnerRingShown, {
+      toValue: isActive ? 1 : 0,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  }, [isActive]);
 
   useEffect(() => {
     async function playSong(songDetails) {
@@ -149,17 +213,9 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
     }
     return () => {
       setPlayPercentage(0);
+      setIsPlaying(false);
     };
   }, [songDetails, isActive]);
-
-  useEffect(() => {
-    Animated.timing(strokeDashoffset, {
-      toValue:
-        circleCircumference - (circleCircumference * playPercentage) / 100,
-      duration: 50,
-      useNativeDriver: false,
-    }).start();
-  }, [playPercentage]);
 
   async function playSound(songDetails) {
     await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
@@ -174,6 +230,8 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
     );
 
     _onPlaybackStatusUpdate = (playbackStatus) => {
+      setSoundStatus(playbackStatus);
+
       if (!playbackStatus.isLoaded) {
         // Update your UI for the unloaded state
         if (playbackStatus.error) {
@@ -188,7 +246,7 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
         setPlayPercentage(
           (playbackStatus.positionMillis / playbackStatus.durationMillis) * 100
         );
-2
+        2;
         if (playbackStatus.isPlaying) {
           // Update your UI for the playing state
           setIsPlaying(true);
@@ -199,6 +257,7 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
 
         if (playbackStatus.isBuffering) {
           // Update your UI for the buffering state
+          console.log("buffering");
         }
 
         if (playbackStatus.didJustFinish && !playbackStatus.isLooping) {
@@ -207,20 +266,20 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
       }
     };
 
-    const progressUpdateIntervalMillis = 50;
-    sound.setProgressUpdateIntervalAsync(progressUpdateIntervalMillis);
-    sound.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate);
-    setSoundStateAction(sound);
-    setSound(sound);
+    if (sound && status.isLoaded) {
+      const progressUpdateIntervalMillis = 50;
+      sound.setProgressUpdateIntervalAsync(progressUpdateIntervalMillis);
+      sound.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate);
+      setSoundStateAction(sound);
+      setSound(sound);
+    }
 
     if (canPlay) await sound.playAsync();
   }
 
   async function pauseSound() {
-    if (isPlaying) {
-      sound.pauseAsync();
-    } else {
-      sound.playAsync();
+    if (soundStatus?.isLoaded) {
+      isPlaying ? sound.pauseAsync() : sound.playAsync();
     }
   }
 
@@ -254,7 +313,7 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
               strokeLinecap="round"
             />
           )}
-          <Circle
+          <AnimatedCircle
             cx="50%"
             cy="50%"
             r={77}
@@ -262,18 +321,48 @@ const SongBox = ({ songDetails, isActive, setSoundStateAction }) => {
             fill="transparent"
             strokeWidth="4"
             strokeLinecap="round"
+            opacity={isInnerRingShown}
           />
         </G>
       </Svg>
       <TouchableOpacity onPress={pauseSound} style={{ position: "absolute" }}>
-        <Image
-          style={{
-            height: 225,
-            width: 225,
-            borderRadius: 225 / 2,
-          }}
-          source={{ uri: songDetails.albumArtUri }}
-        />
+        <View style={{ alignItems: "center", justifyContent: "center" }}>
+          {/* Black filter */}
+          <View
+            style={{
+              height: 225,
+              width: 225,
+              borderRadius: 225 / 2,
+              backgroundColor: "black",
+              position: "absolute",
+              opacity: 0.5,
+              zIndex: 1,
+            }}
+          ></View>
+
+          {/* Album Art */}
+          <Image
+            style={{
+              height: 225,
+              width: 225,
+              borderRadius: 225 / 2,
+            }}
+            source={{ uri: songDetails.albumArtUri }}
+          />
+
+          {/* Pause/Play Icon */}
+          <Image
+            style={[
+              GlobalStyles.icons.default,
+              { position: "absolute", height: 35, zIndex: 2 },
+            ]}
+            source={
+              isPlaying
+                ? require("../assets/icons/pause-icon.png")
+                : require("../assets/icons/play-icon.png")
+            }
+          />
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -289,5 +378,19 @@ const styles = StyleSheet.create({
   donutWrapper: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  songTitle: {
+    textAlign: "center",
+    color: GlobalStyles.colors.purple_200,
+  },
+  songInfo: {
+    color: GlobalStyles.colors.white,
+    paddingTop: 2,
+    paddingBottom: 2,
+  },
+  recoscreenButton: {
+    width: 20,
+    marginLeft: 20,
+    marginRight: 20,
   },
 });
