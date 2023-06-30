@@ -3,9 +3,10 @@ import GlobalStyles from "./src/constants/GlobalStyles";
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
-import { Navbar } from "./components/Navbar";
+import { Navbar } from "./src/components/Navbar";
 import { useState } from "react";
 import { Screens } from "./src/constants/Screens";
+import RecoScreen from "./src/screens/RecoScreen";
 
 // Placeholder screen
 function DashboardScreen() {
@@ -13,11 +14,11 @@ function DashboardScreen() {
     <View style={styles.container}>
       <Image
         style={{ height: 90, resizeMode: "contain" }}
-        source={require("./assets/images/recovibez-logo.png")}
+        source={require("./src/assets/images/recovibez-logo.png")}
       />
       <Image
         style={GlobalStyles.icons.lg}
-        source={require("./assets/icons/disk-icon.png")}
+        source={require("./src/assets/icons/disk-icon.png")}
       />
       <Text
         style={[GlobalStyles.text.h3, { color: GlobalStyles.colors.white }]}
@@ -28,25 +29,16 @@ function DashboardScreen() {
   );
 }
 
-// Placeholder screen
-function RecoScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Reco Screen</Text>
-    </View>
-  );
-}
-
 export default function App() {
   // set the current active screen
   const [activeScreen, setActiveScreen] = useState(Screens.DashboardScreen);
 
   // load custom fonts
   const [fontsLoaded] = useFonts({
-    "Poppins-Regular": require("./assets/fonts/Poppins-Regular.ttf"),
-    "Poppins-Medium": require("./assets/fonts/Poppins-Medium.ttf"),
-    "Poppins-SemiBold": require("./assets/fonts/Poppins-SemiBold.ttf"),
-    "Poppins-Bold": require("./assets/fonts/Poppins-Bold.ttf"),
+    "Poppins-Regular": require("./src/assets/fonts/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("./src/assets/fonts/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("./src/assets/fonts/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("./src/assets/fonts/Poppins-Bold.ttf"),
   });
 
   if (!fontsLoaded) {
